@@ -18,7 +18,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,22 +63,9 @@ func create(cmd *cobra.Command, args []string) {
 }
 
 func createNote(noteName string) (string, error) {
-	home := homeDir()
-	notesDir := viper.GetString("notesDirectory")
+	notesDir := getNotesDirectory()
 
-	if lastChar := notesDir[len(notesDir)-1:]; lastChar != "/" {
-		notesDir = notesDir + "/"
-	}
-
-	notesDir = strings.Replace(notesDir, "$HOME", home, 1)
-
-	if _, err := os.Stat(notesDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(notesDir, os.ModePerm); err != nil {
-			er("Unable to create base notes directory")
-		}
-	}
-
-	notePath := notesDir + "20180519162853." + noteName + ".md"
+	notePath := fmt.Sprintf("%s%s.%s.md", notesDir, currTimestamp(), noteName)
 
 	file, err := os.OpenFile(notePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -87,6 +75,10 @@ func createNote(noteName string) (string, error) {
 	defer file.Close()
 
 	return notePath, nil
+}
+
+func currTimestamp() string {
+	return strconv.Itoa(int(time.Now().Unix()))
 }
 
 func openNoteInEditor(notePath string) {

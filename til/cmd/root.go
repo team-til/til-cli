@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -60,3 +61,22 @@ func initConfig() {
 
 var initRequiredMsg = `Run the init command to setup TIL:
 $ til init`
+
+func getNotesDirectory() string {
+	home := homeDir()
+	notesDir := viper.GetString("notesDirectory")
+
+	if lastChar := notesDir[len(notesDir)-1:]; lastChar != "/" {
+		notesDir = notesDir + "/"
+	}
+
+	notesDir = strings.Replace(notesDir, "$HOME", home, 1)
+
+	if _, err := os.Stat(notesDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(notesDir, os.ModePerm); err != nil {
+			er("Unable to create base notes directory")
+		}
+	}
+
+	return notesDir
+}
